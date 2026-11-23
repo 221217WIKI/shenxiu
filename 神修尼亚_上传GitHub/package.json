@@ -1,0 +1,16 @@
+{
+  "name": "shenxiu-ning-chat",
+  "version": "1.0.0",
+  "description": "神修尼亚 聊天服务（本地文件 / MongoDB 双模式）",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "mongodb": "^6.22.0",
+    "ws": "^8.18.0"
+  }
+}

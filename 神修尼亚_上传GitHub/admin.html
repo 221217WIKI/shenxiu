@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>神修尼亚 · 管理后台</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;background:#0e1015;color:#e6e8ee;min-height:100vh}
+a{color:#f6c453}
+.login{position:fixed;inset:0;background:#0e1015;display:flex;align-items:center;justify-content:center;z-index:99}
+.loginbox{width:340px;background:#171a22;border:1px solid #2a2f3d;border-radius:14px;padding:26px}
+.loginbox h1{font-size:20px;margin-bottom:6px;color:#f6c453}
+.loginbox p{font-size:12px;color:#8891a5;margin-bottom:18px}
+.loginbox input{width:100%;padding:11px 12px;background:#0e1116;border:1px solid #2a2f3d;border-radius:9px;color:#e6e8ee;margin-bottom:12px;font-size:14px}
+.btn{cursor:pointer;border:none;border-radius:9px;padding:10px 16px;font-size:13px;font-weight:600;transition:.15s}
+.btn.primary{background:linear-gradient(135deg,#b8860b,#f6c453);color:#1a1408;width:100%}
+.btn.primary:hover{filter:brightness(1.1)}
+.btn.blue{background:#1f6feb;color:#fff}
+.btn.red{background:#c62828;color:#fff}
+.btn.gray{background:#2a2f3d;color:#cfd5e3}
+.btn.small{padding:5px 10px;font-size:12px;border-radius:7px}
+.wrap{max-width:1080px;margin:0 auto;padding:22px 18px 60px}
+.head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.head h2{font-size:20px;color:#f6c453}
+.head .sub{font-size:12px;color:#8891a5;margin-top:4px}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+.card{background:linear-gradient(160deg,#1a1e27,#141721);border:1px solid #2a2f3d;border-radius:13px;padding:15px}
+.card .k{font-size:12px;color:#8891a5}
+.card .v{font-size:26px;font-weight:700;margin-top:6px;color:#f6c453}
+.panel{background:#141721;border:1px solid #2a2f3d;border-radius:13px;padding:16px;margin-bottom:16px}
+.panel h3{font-size:15px;margin-bottom:12px;color:#dfe3ee;display:flex;align-items:center;gap:8px}
+.panel h3::before{content:"";width:4px;height:15px;background:#f6c453;border-radius:2px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.row input{flex:1;min-width:140px;padding:10px 12px;background:#0e1116;border:1px solid #2a2f3d;border-radius:9px;color:#e6e8ee;font-size:13px}
+.tip{font-size:12px;color:#8891a5;margin-top:10px;line-height:1.7}
+.result{margin-top:12px;padding:12px;background:#0e1116;border:1px dashed #33405a;border-radius:9px;font-size:13px;display:none;line-height:1.9}
+.result code{color:#6ee7b7;font-size:15px;font-weight:700;letter-spacing:1px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:9px 10px;text-align:left;border-bottom:1px solid #232838;vertical-align:middle}
+th{color:#8891a5;font-weight:500;font-size:12px;background:#11141b}
+td code{color:#6ee7b7;font-weight:600}
+.badge{padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;display:inline-block}
+.badge.ok{background:rgba(46,160,67,.18);color:#4ade80}
+.badge.bad{background:rgba(198,40,40,.2);color:#ff6b6b}
+.empty{text-align:center;color:#5c6478;padding:22px;font-size:13px}
+.tabs{display:flex;gap:8px;margin-bottom:14px}
+.tab{padding:8px 14px;border-radius:9px;background:#171a22;border:1px solid #2a2f3d;color:#8891a5;cursor:pointer;font-size:13px}
+.tab.on{background:rgba(246,196,83,.14);color:#f6c453;border-color:#5a4a1e}
+@media(max-width:720px){.cards{grid-template-columns:repeat(2,1fr)}table{font-size:12px}th,td{padding:7px 6px}}
+</style>
+</head>
+<body>
+
+<div class="login" id="login">
+  <div class="loginbox">
+    <h1>神修尼亚 · 管理后台</h1>
+    <p>请输入管理密钥（默认 admin-888888）</p>
+    <input id="keyInput" type="password" placeholder="管理密钥">
+    <button class="btn primary" onclick="doLogin()">进入后台</button>
+    <div class="tip" id="loginTip"></div>
+  </div>
+</div>
+
+<div class="wrap" id="app" style="display:none">
+  <div class="head">
+    <div><h2>管理后台</h2><div class="sub">查询设备号即自动锁定 · 通行码发放 · 举报处理</div></div>
+    <button class="btn gray small" onclick="logout()">退出</button>
+  </div>
+
+  <div class="cards">
+    <div class="card"><div class="k">设备记录总数</div><div class="v" id="sTotal">-</div></div>
+    <div class="card"><div class="k">已授权</div><div class="v" id="sAllowed">-</div></div>
+    <div class="card"><div class="k">已封禁</div><div class="v" id="sBanned">-</div></div>
+    <div class="card"><div class="k">被锁定次数</div><div class="v" id="sLocked">-</div></div>
+    <div class="card" style="grid-column:span 4;background:#141721"><div class="k">未处理举报</div><div class="v" id="sReports" style="color:#ff6b6b">-</div></div>
+  </div>
+
+  <div class="panel">
+    <h3>查询设备号（自动锁定）</h3>
+    <div class="row">
+      <input id="devInput" placeholder="输入设备号，例如 XG-ABC123-DEF456">
+      <button class="btn red" onclick="lockDevice()">查询并锁定</button>
+      <button class="btn blue" onclick="allowDevice()">授权发号</button>
+    </div>
+    <div class="result" id="lockResult"></div>
+    <div class="tip">「查询并锁定」会让该设备号立刻变成封禁状态，对方下次打开软件会卡在设备号登录页，进不去。<br>「授权发号」会自动生成通行码，你把通行码发给对方，他在登录页输入即可进入。</div>
+  </div>
+
+  <div class="panel">
+    <h3>在线人数上限</h3>
+    <div class="row">
+      <span style="font-size:12px;color:#8891a5">当前在线</span>
+      <span id="onlineNow" style="font-size:18px;color:#f6c453;font-weight:700">-</span>
+      <input id="maxOnlineInput" placeholder="例如 300" style="max-width:130px;flex:none">
+      <button class="btn blue" onclick="saveMaxOnline()">保存上限</button>
+      <button class="btn gray" onclick="loadConfig()">刷新</button>
+    </div>
+    <div class="tip">达到上限后新用户无法进入软件，会提示「服务器人数已满」；已经在线的人不受影响。</div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab on" data-tab="devices" onclick="switchTab('devices')">设备列表</div>
+    <div class="tab" data-tab="reports" onclick="switchTab('reports')">举报记录</div>
+    <div class="tab" data-tab="violations" onclick="switchTab('violations')">违规管理</div>
+    <div class="tab" data-tab="badwords" onclick="switchTab('badwords')">违规词库</div>
+  </div>
+
+  <div class="panel" id="tabDevices">
+    <h3>设备列表</h3>
+    <div style="overflow-x:auto"><table>
+      <thead><tr><th>设备号</th><th>状态</th><th>通行码</th><th>锁定次数</th><th>最近操作</th><th>操作</th></tr></thead>
+      <tbody id="devBody"></tbody>
+    </table></div>
+    <div class="empty" id="devEmpty" style="display:none">暂无设备记录</div>
+  </div>
+
+  <div class="panel" id="tabReports" style="display:none">
+    <h3>举报封号规则</h3>
+    <div class="row" style="flex-wrap:wrap;margin-bottom:10px">
+      <span style="font-size:12px;color:#8891a5">满</span>
+      <input id="repNeed" style="max-width:80px;flex:none" value="12">
+      <span style="font-size:12px;color:#8891a5">人举报同一人 → 自动封号</span>
+      <input id="repDays" style="max-width:80px;flex:none" value="7">
+      <span style="font-size:12px;color:#8891a5">天</span>
+      <button class="btn primary" style="width:auto" onclick="saveReportCfg()">保存规则</button>
+      <button class="btn blue" style="width:auto" onclick="loadReportStats()">刷新榜单</button>
+    </div>
+    <div class="tip" style="margin:0 0 14px">同一账号重复举报同一人只算一次（按独立举报人数计算，防刷量）。</div>
+    <h3>举报榜（按举报人数排序）</h3>
+    <div style="overflow-x:auto"><table>
+      <thead><tr><th>被举报人</th><th>独立举报人数</th><th>举报总次数</th><th>状态</th><th>最近被举报</th><th>操作</th></tr></thead>
+      <tbody id="repStatBody"></tbody>
+    </table></div>
+    <div class="empty" id="repStatEmpty" style="display:none">还没有人举报</div>
+
+    <h3 style="margin-top:22px">原始举报记录</h3>
+    <div style="overflow-x:auto"><table>
+      <thead><tr><th>时间</th><th>举报人</th><th>被举报人</th><th>理由</th><th>内容</th><th>设备号</th></tr></thead>
+      <tbody id="repBody"></tbody>
+    </table></div>
+    <div class="empty" id="repEmpty" style="display:none">暂无举报</div>
+  </div>
+
+  <div class="panel" id="tabViolations" style="display:none">
+    <h3>手动封号 / 解封（按账号）</h3>
+    <div class="row" style="flex-wrap:wrap;margin-bottom:10px">
+      <input id="banAccount" placeholder="用户名 或 UID" style="flex:1;min-width:170px">
+      <select id="banHours" style="max-width:130px;flex:none;padding:10px;background:#0e1116;border:1px solid #2a2f3d;border-radius:9px;color:#e6e8ee;font-size:13px">
+        <option value="24">封 1 天</option>
+        <option value="168">封 7 天</option>
+        <option value="720">封 30 天</option>
+        <option value="0">永久封禁</option>
+      </select>
+      <button class="btn red" style="width:auto" onclick="banUser()">封号</button>
+      <button class="btn blue" style="width:auto" onclick="unbanByAccount()">解封</button>
+    </div>
+    <div class="tip" id="banMsg" style="display:none;margin-bottom:12px"></div>
+    <h3>违规记录（机器人自动判定）</h3>
+    <div class="tip" style="margin:0 0 12px">规则：轻微违规 24 小时内满 <span id="vioThreshold">3</span> 次 → 封号 1 天；特大违规 → 直接封号 30 天。命中后消息会被拦截，不会发出去。</div>
+    <div style="overflow-x:auto"><table>
+      <thead><tr><th>用户</th><th>违规次数</th><th>状态</th><th>剩余</th><th>原因</th><th>最近违规词</th><th>操作</th></tr></thead>
+      <tbody id="vioBody"></tbody>
+    </table></div>
+    <div class="empty" id="vioEmpty" style="display:none">暂无违规记录</div>
+  </div>
+
+  <div class="panel" id="tabBadwords" style="display:none">
+    <h3>违规词库设置</h3>
+    <div class="tip" style="margin:0 0 12px">一行一个词，用换行或逗号分隔。命中「轻微」只拦截并计数；命中「特大」直接封 30 天。</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div>
+        <div style="font-size:12px;color:#8891a5;margin-bottom:6px">轻微违规词（计数，满阈值封 1 天）</div>
+        <textarea id="bwMild" style="width:100%;height:180px;padding:10px;background:#0e1116;border:1px solid #2a2f3d;border-radius:9px;color:#e6e8ee;font-size:13px;line-height:1.6"></textarea>
+      </div>
+      <div>
+        <div style="font-size:12px;color:#8891a5;margin-bottom:6px">特大违规词（直接封 30 天）</div>
+        <textarea id="bwSevere" style="width:100%;height:180px;padding:10px;background:#0e1116;border:1px solid #2a2f3d;border-radius:9px;color:#e6e8ee;font-size:13px;line-height:1.6"></textarea>
+      </div>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <span style="font-size:12px;color:#8891a5">封 1 天阈值（24 小时内次数）</span>
+      <input id="bwThreshold" style="max-width:90px;flex:none" value="3">
+      <button class="btn primary" style="width:auto" onclick="saveBadwords()">保存词库</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const KSTORE='shenxiu_admin_key';
+let KEY='';
+let runKey='';
+let curTab='devices';
+
+function doLogin(){
+  const k=document.getElementById('keyInput').value.trim();
+  if(!k){document.getElementById('loginTip').textContent='请输入密钥';return}
+  KEY=k;
+  getStats().then(r=>{
+    if(!r.ok){document.getElementById('loginTip').textContent='密钥错误';KEY='';return}
+    localStorage.setItem(KSTORE,k);
+    document.getElementById('login').style.display='none';
+    document.getElementById('app').style.display='block';
+    renderStats(r);
+    loadDevices();loadReports();loadConfig();
+  });
+}
+function logout(){localStorage.removeItem(KSTORE);KEY='';location.reload()}
+
+async function getStats(){return fetch('/api/admin/stats?key='+encodeURIComponent(KEY)).then(r=>r.json())}
+async function post(path,body){return fetch('/api/admin/'+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({key:KEY},body))}).then(r=>r.json())}
+
+function renderStats(r){
+  const s=r.stats||{};
+  document.getElementById('sTotal').textContent=s.total??0;
+  document.getElementById('sAllowed').textContent=s.allowed??0;
+  document.getElementById('sBanned').textContent=s.banned??0;
+  document.getElementById('sLocked').textContent=s.lockedCount??0;
+}
+
+function fmt(t){if(!t)return '-';const d=new Date(t);return d.toLocaleString('zh-CN',{hour12:false})}
+
+function lockDevice(){
+  const id=document.getElementById('devInput').value.trim();
+  if(!id){alert('请输入设备号');return}
+  post('lock',{deviceId:id}).then(r=>{
+    const box=document.getElementById('lockResult');box.style.display='block';
+    if(!r.ok){box.innerHTML='<span style="color:#ff6b6b">'+r.msg+'</span>';return}
+    const d=r.device;
+    box.innerHTML='已锁定设备：<b>'+d.deviceId+'</b><br>状态：<span class="badge bad">已封禁</span><br>通行码：<code>'+d.code+'</code>（如需放行，先点下方"解封"再发号）<br>锁定次数：'+d.lockCount+'　最近锁定：'+fmt(d.lastLock);
+    loadDevices();getStats().then(renderStats);
+  });
+}
+function allowDevice(){
+  const id=document.getElementById('devInput').value.trim();
+  if(!id){alert('请输入设备号');return}
+  post('allow',{deviceId:id}).then(r=>{
+    const box=document.getElementById('lockResult');box.style.display='block';
+    if(!r.ok){box.innerHTML='<span style="color:#ff6b6b">'+r.msg+'</span>';return}
+    box.innerHTML='已授权设备：<b>'+r.deviceId+'</b><br>通行码：<code>'+r.code+'</code><br>把通行码发给对方，他在登录页输入即可进入。';
+    loadDevices();getStats().then(renderStats);
+  });
+}
+
+function loadDevices(){
+  fetch('/api/admin/devices?key='+encodeURIComponent(KEY)).then(r=>r.json()).then(r=>{
+    const tb=document.getElementById('devBody');
+    tb.innerHTML='';
+    if(!r.ok||!r.list.length){document.getElementById('devEmpty').style.display='block';return}
+    document.getElementById('devEmpty').style.display='none';
+    r.list.sort((a,b)=>(b.lastLock||b.time||0)-(a.lastLock||a.time||0)).forEach(d=>{
+      const tr=document.createElement('tr');
+      const st=d.status==='banned'?'<span class="badge bad">已封禁</span>':'<span class="badge ok">已授权</span>';
+      tr.innerHTML='<td><code>'+escapeHtml(d.deviceId)+'</code></td><td>'+st+'</td><td><code>'+escapeHtml(d.code||'-')+'</code></td><td>'+(d.lockCount||0)+'</td><td>'+(d.lastLock?fmt(d.lastLock):fmt(d.time))+'</td>'+
+        '<td><button class="btn blue small" onclick="act(\'unban\',\''+escAttr(d.deviceId)+'\')">解封</button> '+
+        '<button class="btn red small" onclick="act(\'ban\',\''+escAttr(d.deviceId)+'\')">封禁</button> '+
+        '<button class="btn gray small" onclick="act(\'delete\',\''+escAttr(d.deviceId)+'\')">删除</button></td>';
+      tb.appendChild(tr);
+    });
+  });
+}
+function act(path,id){
+  if(path==='delete'&&!confirm('确定删除该设备记录？'))return;
+  post(path,{deviceId:id}).then(r=>{if(!r.ok)alert(r.msg);loadDevices();getStats().then(renderStats)});
+}
+
+function loadReports(){
+  fetch('/api/admin/reports?key='+encodeURIComponent(KEY)).then(r=>r.json()).then(r=>{
+    const tb=document.getElementById('repBody');tb.innerHTML='';
+    document.getElementById('sReports').textContent=(r.list||[]).length;
+    if(!r.ok||!r.list.length){document.getElementById('repEmpty').style.display='block';return}
+    document.getElementById('repEmpty').style.display='none';
+    r.list.forEach(x=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML='<td>'+fmt(x.time)+'</td><td>'+escapeHtml(x.reporterNick||x.reporterUid||'-')+'</td><td>'+escapeHtml(x.targetNick||x.targetUid||'-')+'</td><td>'+escapeHtml(x.reason||'-')+'</td><td>'+escapeHtml((x.content||'').slice(0,80))+'</td><td><code>'+escapeHtml(x.deviceId||'-')+'</code></td>';
+      tb.appendChild(tr);
+    });
+  });
+}
+
+function switchTab(t){
+  curTab=t;
+  document.querySelectorAll('.tab').forEach(el=>el.classList.toggle('on',el.dataset.tab===t));
+  document.getElementById('tabDevices').style.display=t==='devices'?'block':'none';
+  document.getElementById('tabReports').style.display=t==='reports'?'block':'none';
+  document.getElementById('tabViolations').style.display=t==='violations'?'block':'none';
+  document.getElementById('tabBadwords').style.display=t==='badwords'?'block':'none';
+  if(t==='violations') loadViolations();
+  if(t==='badwords') loadBadwords();
+  if(t==='reports'){ loadConfig(); loadReports(); loadReportStats(); }
+}
+
+/* ===== 举报封号规则 ===== */
+function loadReportStats(){
+  fetch('/api/admin/report-stats?key='+encodeURIComponent(KEY)).then(r=>r.json()).then(r=>{
+    if(!r.ok)return;
+    document.getElementById('repNeed').value=r.need||12;
+    document.getElementById('repDays').value=r.days||7;
+    const tb=document.getElementById('repStatBody'); tb.innerHTML='';
+    const list=(r.list||[]).slice();
+    if(!list.length){document.getElementById('repStatEmpty').style.display='block';return}
+    document.getElementById('repStatEmpty').style.display='none';
+    list.forEach(x=>{
+      const tr=document.createElement('tr');
+      const st=x.banned?'<span class="badge bad">已封禁</span>':'<span class="badge ok">正常</span>';
+      const color=x.reporters>=(r.need||12)?'color:#ff6b6b;font-weight:700':'';
+      tr.innerHTML='<td>'+escapeHtml(x.targetNick||'-')+'<br><code>'+escapeHtml(x.targetUid||x.key)+'</code></td>'+
+        '<td style="'+color+'">'+(x.reporters||0)+' / '+(r.need||12)+'</td>'+
+        '<td>'+(x.count||0)+'</td><td>'+st+'</td><td>'+fmt(x.last)+'</td>'+
+        '<td>'+(x.banned?'<span style="color:#8891a5">已封禁</span>':'<button class="btn red small" onclick="banReported(\''+escAttr(x.targetUid||'')+'\',\''+escAttr(x.targetNick||'')+'\')">一键封号</button>')+'</td>';
+      tb.appendChild(tr);
+    });
+  });
+}
+function banReported(uid,nick){
+  if(!uid){alert('该被举报人没有 UID，无法按账号封禁');return}
+  if(!confirm('确定封禁「'+(nick||uid)+'」？'))return;
+  post('ban-user',{account:uid,hours:document.getElementById('banHours')?document.getElementById('banHours').value:168}).then(r=>{
+    if(!r.ok){alert(r.msg||'操作失败');return}
+    loadReportStats(); loadViolations();
+  });
+}
+function saveReportCfg(){
+  const need=document.getElementById('repNeed').value.trim();
+  const days=document.getElementById('repDays').value.trim();
+  if(!need||!days){alert('请填写人数和天数');return}
+  post('config',{reportBanCount:need,reportBanDays:days}).then(r=>{
+    if(!r.ok){alert(r.msg||'保存失败');return}
+    document.getElementById('repNeed').value=r.reportBanCount;
+    document.getElementById('repDays').value=r.reportBanDays;
+    alert('已保存：满 '+r.reportBanCount+' 人举报自动封号 '+r.reportBanDays+' 天');
+  });
+}
+
+/* ===== 在线人数上限 ===== */
+function loadConfig(){
+  fetch('/api/admin/config?key='+encodeURIComponent(KEY)).then(r=>r.json()).then(r=>{
+    if(!r.ok)return;
+    document.getElementById('onlineNow').textContent=(r.onlineNow??0);
+    document.getElementById('maxOnlineInput').value=(r.maxOnline??300);
+    if(document.getElementById('repNeed')) document.getElementById('repNeed').value=(r.reportBanCount??12);
+    if(document.getElementById('repDays')) document.getElementById('repDays').value=(r.reportBanDays??7);
+  });
+}
+function saveMaxOnline(){
+  const v=document.getElementById('maxOnlineInput').value.trim();
+  if(!v){alert('请输入人数');return}
+  post('config',{maxOnline:v}).then(r=>{
+    if(!r.ok){alert(r.msg||'保存失败');return}
+    document.getElementById('onlineNow').textContent=(r.onlineNow??0);
+    document.getElementById('maxOnlineInput').value=r.maxOnline;
+    alert('已保存，上限 '+r.maxOnline+' 人');
+  });
+}
+
+/* ===== 违规管理 ===== */
+function loadViolations(){
+  fetch('/api/admin/violations?key='+encodeURIComponent(KEY)).then(r=>r.json()).then(r=>{
+    const tb=document.getElementById('vioBody'); tb.innerHTML='';
+    const now=Date.now();
+    document.getElementById('vioThreshold').textContent=r.threshold||3;
+    const list=(r.list||[]).slice().sort((a,b)=>(b.lastBan||0)-(a.lastBan||0));
+    if(!r.ok||!list.length){document.getElementById('vioEmpty').style.display='block';return}
+    document.getElementById('vioEmpty').style.display='none';
+    list.forEach(x=>{
+      const tr=document.createElement('tr');
+      const st=x.banned?'<span class="badge bad">已封禁</span>':'<span class="badge ok">正常</span>';
+      const left=x.banned?(Math.max(1,Math.ceil((x.until-now)/3600000))+' 小时'):'-';
+      const words=(x.recent||[]).map(w=>w.word).join('、')||'-';
+      tr.innerHTML='<td>'+escapeHtml(x.nick||'-')+'<br><code>'+escapeHtml(x.uid)+'</code></td>'+
+        '<td>'+(x.count||0)+'</td><td>'+st+'</td><td>'+left+'</td><td>'+escapeHtml(x.reason||'-')+'</td>'+
+        '<td>'+escapeHtml(String(words).slice(0,50))+'</td>'+
+        '<td><button class="btn blue small" onclick="unbanUser(\''+escAttr(x.uid)+'\')">解封清零</button></td>';
+      tb.appendChild(tr);
+    });
+  });
+}
+function unbanUser(uid){
+  if(!confirm('确定解封该账号并清零违规次数？'))return;
+  post('unban-user',{uid}).then(r=>{if(!r.ok)alert(r.msg);loadViolations()});
+}
+function banUser(){
+  const acc=document.getElementById('banAccount').value.trim();
+  const h=document.getElementById('banHours').value;
+  if(!acc){alert('请输入用户名或 UID');return}
+  const label=(h==='0')?'永久封禁':('封 '+h+' 小时');
+  if(!confirm('确定对「'+acc+'」执行：'+label+' ？'))return;
+  const m=document.getElementById('banMsg'); m.style.display='block';
+  post('ban-user',{account:acc,hours:h}).then(r=>{
+    m.innerHTML=r.ok
+      ? '<span style="color:#5dd39e">已封禁 '+(r.nick||acc)+'（'+r.uid+'）'+(r.permanent?'，永久':'，至 '+fmt(r.until))+'</span>'
+      : '<span style="color:#ff6b6b">'+(r.msg||'操作失败')+'</span>';
+    if(r.ok) loadViolations();
+  });
+}
+function unbanByAccount(){
+  const acc=document.getElementById('banAccount').value.trim();
+  if(!acc){alert('请输入用户名或 UID');return}
+  fetch('/api/admin/violations?key='+encodeURIComponent(KEY)).then(r=>r.json()).then(r=>{
+    const list=r.list||[];
+    const hit=list.find(x=>x.uid===acc)||list.find(x=>(x.nick||'')===acc);
+    if(!hit){alert('没有找到该用户的违规/封禁记录');return}
+    if(!confirm('确定解封 '+(hit.nick||hit.uid)+' 并清零违规次数？'))return;
+    post('unban-user',{uid:hit.uid}).then(r2=>{
+      const m=document.getElementById('banMsg'); m.style.display='block';
+      m.innerHTML=r2.ok
+        ? '<span style="color:#5dd39e">已解封 '+(hit.nick||hit.uid)+'</span>'
+        : '<span style="color:#ff6b6b">'+(r2.msg||'操作失败')+'</span>';
+      if(r2.ok) loadViolations();
+    });
+  });
+}
+function loadBadwords(){
+  fetch('/api/admin/badwords?key='+encodeURIComponent(KEY)).then(r=>r.json()).then(r=>{
+    if(!r.ok)return;
+    document.getElementById('bwMild').value=(r.words.mild||[]).join('\n');
+    document.getElementById('bwSevere').value=(r.words.severe||[]).join('\n');
+    document.getElementById('bwThreshold').value=r.words.threshold||3;
+  });
+}
+function saveBadwords(){
+  post('badwords',{
+    mild:document.getElementById('bwMild').value,
+    severe:document.getElementById('bwSevere').value,
+    threshold:document.getElementById('bwThreshold').value
+  }).then(r=>{
+    if(r.ok){alert('词库已保存');loadBadwords();} else alert('保存失败：'+(r.msg||''));
+  });
+}
+function escapeHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function escAttr(s){return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'")}
+
+// 自动登录
+window.addEventListener('DOMContentLoaded',()=>{
+  const k=localStorage.getItem(KSTORE);
+  if(k){KEY=k;getStats().then(r=>{if(r.ok){document.getElementById('login').style.display='none';document.getElementById('app').style.display='block';renderStats(r);loadDevices();loadReports();loadConfig()}else{KEY=''}})}
+});
+</script>
+</body>
+</html>
