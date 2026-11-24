@@ -1,0 +1,17 @@
+{
+  "name": "神修尼亚",
+  "short_name": "神修尼亚",
+  "description": "神修帝国 · 聊天社区",
+  "start_url": "/qq.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#12b7f5",
+  "icons": [
+    { "src": "/apple-touch-icon-120.png", "sizes": "120x120", "type": "image/png" },
+    { "src": "/apple-touch-icon-152.png", "sizes": "152x152", "type": "image/png" },
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "/icon-1024.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any" }
+  ]
+}

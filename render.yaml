@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: shenxiu-ning
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /robots.txt
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+      - key: ADMIN_KEY
+        sync: false
+      - key: MONGO_DB
+        value: shenxiu
